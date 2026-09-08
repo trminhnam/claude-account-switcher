@@ -12,6 +12,7 @@ from claude_switcher.codex_core import (
     CodexCredentialsExpiredError,
     CODEX_KEYRING_UNSUPPORTED_MESSAGE,
     add_new_codex_account,
+    backup_codex_credentials,
     check_codex_cli,
     get_codex_auth_status,
     read_codex_credentials,
@@ -151,6 +152,23 @@ class TestCodexCredentials:
 
         with pytest.raises(CodexCredentialsExpiredError):
             refresh_codex_credentials(_auth_json(email="user@test.com"))
+
+
+class TestBackupCodexCredentials:
+    @patch("claude_switcher.codex_core.keychain")
+    def test_backup_writes_blob_to_keychain(self, mock_kc):
+        creds = _auth_json(email="user@test.com")
+
+        assert backup_codex_credentials(creds) == "user@test.com"
+
+        mock_kc.write_credentials.assert_called_once_with(
+            "codex-switcher:user@test.com", "user@test.com", creds
+        )
+
+    @patch("claude_switcher.codex_core.keychain")
+    def test_backup_skips_credentials_without_email(self, mock_kc):
+        assert backup_codex_credentials(json.dumps({"tokens": {}})) is None
+        mock_kc.write_credentials.assert_not_called()
 
 
 class TestImportCodexAccount:
