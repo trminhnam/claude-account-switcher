@@ -241,7 +241,7 @@ def backup_codex_credentials(creds: str) -> str | None:
     if not email:
         return None
     _validate_email(email)
-    backup_codex_credentials(creds)
+    keychain.write_credentials(f"{CODEX_KEYCHAIN_PREFIX}{email}", email, creds)
     return email
 
 
